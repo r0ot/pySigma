@@ -259,6 +259,29 @@ class RuleContainsDetectionItemCondition(RuleDetectionItemCondition):
 
 
 @dataclass
+class RuleContainsDetectionItemField(RuleDetectionItemCondition):
+    """Returns True if rule contains a detection item that matches the given field name and value."""
+
+    field: Optional[str]
+
+    def find_detection_item(self, detection: Union[SigmaDetectionItem, SigmaDetection]) -> bool:
+        if isinstance(detection, SigmaDetection):
+            for detection_item in detection.detection_items:
+                if self.find_detection_item(detection_item):
+                    return True
+        elif isinstance(detection, SigmaDetectionItem):
+            if (
+                detection.field is not None
+                and detection.field == self.field
+            ):
+                return True
+        else:
+            raise TypeError("Parameter of type SigmaDetection or SigmaDetectionItem expected.")
+
+        return False
+
+
+@dataclass
 class RuleProcessingItemAppliedCondition(RuleProcessingCondition):
     """
     Checks if processing item was applied to rule.
@@ -660,6 +683,7 @@ class FieldNameProcessingItemAppliedCondition(FieldNameProcessingCondition):
 rule_conditions: Dict[str, RuleProcessingCondition] = {
     "logsource": LogsourceCondition,
     "contains_detection_item": RuleContainsDetectionItemCondition,
+    "contains_detection_item_field": RuleContainsDetectionItemField,
     "contains_field": RuleContainsFieldCondition,
     "processing_item_applied": RuleProcessingItemAppliedCondition,
     "processing_state": RuleProcessingStateCondition,
